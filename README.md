@@ -24,65 +24,65 @@
   - 检测伪造初始化连接
 
 ## 密码学回顾
-- 数字签名
-  - 步骤
-    - Signature = KRa(Hash(M))
-    - a -> (M||Signature) -> b
-    - b check if KUa(Signature) == Hash(M)
-  - 安全性
-    - 完整性，由Hash提供
-    - 身份认证（鉴别），由发送方私钥加密（或加盐）提供
-    - 不可否认性，由发送方私钥加密（或加盐）提供
-  - Hash分类
-    - 弱无碰撞：几乎找不到x'使得h(x)=h(x')
-    - 强无碰撞：几乎不可能找到x'使得h(x)=h(x')
-    - MAC：Message Authentication Code 需要密钥
-    - MDC：Message Detection Code 不用密钥
-- 数字信封
-  - 步骤
-    - Digital Envelope = KUb(Ks)
-    - a -> (Ks(M)||KUb(Ks)) -> b
-    - b: KRb(KUb(Ks)) -> Ks -> M
-  - 安全性
-    - 机密性
-- 密钥管理与分配
-  - 基于对称密码体制的对称密钥分配
-    - A -> A, B -> KDC
-    - KDC -> Ka(Kab, Kb(A, B, Kab)) -> A
-    - A -> Kb(A, B, Kab) -> B
-  - 基于公钥密码体制的对称密钥分配（前三步为鉴别）
-    - A -> KUb(IDa, N1) -> B
-    - B -> KUa(N1, N2) -> A
-    - A -> KUb(N2) -> B
-    - A -> KUb(KRa(Ks)) -> B
-  - 基于公钥密码体制的公钥分配
-    - 公开发布：用户将公钥直接发给其他用户；<font color=red>容易假冒，以其他用户名义发布公钥</font>
-    - 公用目录表：由可信实体建立、接受用户注册公钥、维护，内容为用户名+公钥；<font color=red>目录表易受攻击</font>
-    - 公钥授权：在公用目录表基础上更严格，用户要可靠知道管理员公钥。<font color=red>公钥管理机构成为系统瓶颈（效率、安全性）</font>
-      - a -> Req||Time1 -> Authority
-      - Authority -> KRauth(KUb||Req||Time1) -> a
-      - a -> KUb(IDa||N1) -> b
-      - b -> Req||Time2 -> Authority
-      - Authority -> KRauth(KUa||Req||Time2) -> b
-      - b -> KUa(N1||N2) -> a
-      - a -> KUb(N2) -> b
-    - 公钥证书(通信双方交换证书即可，不需要与管理机构联系，解决瓶颈问题)
-      - Ca=KRauth(T,IDa,KUa) 时间戳、用户身份标识、用户公钥
-      - a -> KUa -> CA
-      - CA -> ERauth(T1, IDa, KUa) (Ca) -> a
-      - b -> KUb -> CA
-      - CA -> ERauth(T2, KDb, KUb) (Cb) -> b
-      - a -> Ca -> b
-      - b -> Cb -> a
-  - PKI（公钥基础设施）组件
-    - RA(Registration Authority)：将用户身份与密钥绑定
-    - CA(Certificate Authority)：发证、验证、撤销、更新
-    - 证书库：保存证书、证书撤销列表(CRL)
-    - 流程
-      - a -> Certificate Request(KUa) -> RA
-      - RA verifies Certificate request and send to CA
-      - CA creates certificate using KRca, store certificate in CA database
-      - CA return certificate to a
+### 数字签名
+- 步骤
+  - Signature = KRa(Hash(M))
+  - a -> (M||Signature) -> b
+  - b check if KUa(Signature) == Hash(M)
+- 安全性
+  - 完整性，由Hash提供
+  - 身份认证（鉴别），由发送方私钥加密（或加盐）提供
+  - 不可否认性，由发送方私钥加密（或加盐）提供
+- Hash分类
+  - 弱无碰撞：几乎找不到x'使得h(x)=h(x')
+  - 强无碰撞：几乎不可能找到x'使得h(x)=h(x')
+  - MAC：Message Authentication Code 需要密钥
+  - MDC：Message Detection Code 不用密钥
+### 数字信封
+- 步骤
+  - Digital Envelope = KUb(Ks)
+  - a -> (Ks(M)||KUb(Ks)) -> b
+  - b: KRb(KUb(Ks)) -> Ks -> M
+- 安全性
+  - 机密性
+### 密钥管理与分配
+- 基于对称密码体制的对称密钥分配
+  - A -> A, B -> KDC
+  - KDC -> Ka(Kab, Kb(A, B, Kab)) -> A
+  - A -> Kb(A, B, Kab) -> B
+- 基于公钥密码体制的对称密钥分配（前三步为鉴别）
+  - A -> KUb(IDa, N1) -> B
+  - B -> KUa(N1, N2) -> A
+  - A -> KUb(N2) -> B
+  - A -> KUb(KRa(Ks)) -> B
+- 基于公钥密码体制的公钥分配
+  - 公开发布：用户将公钥直接发给其他用户；<font color=red>容易假冒，以其他用户名义发布公钥</font>
+  - 公用目录表：由可信实体建立、接受用户注册公钥、维护，内容为用户名+公钥；<font color=red>目录表易受攻击</font>
+  - 公钥授权：在公用目录表基础上更严格，用户要可靠知道管理员公钥。<font color=red>公钥管理机构成为系统瓶颈（效率、安全性）</font>
+    - a -> Req||Time1 -> Authority
+    - Authority -> KRauth(KUb||Req||Time1) -> a
+    - a -> KUb(IDa||N1) -> b
+    - b -> Req||Time2 -> Authority
+    - Authority -> KRauth(KUa||Req||Time2) -> b
+    - b -> KUa(N1||N2) -> a
+    - a -> KUb(N2) -> b
+  - 公钥证书(通信双方交换证书即可，不需要与管理机构联系，解决瓶颈问题)
+    - Ca=KRauth(T,IDa,KUa) 时间戳、用户身份标识、用户公钥
+    - a -> KUa -> CA
+    - CA -> ERauth(T1, IDa, KUa) (Ca) -> a
+    - b -> KUb -> CA
+    - CA -> ERauth(T2, KDb, KUb) (Cb) -> b
+    - a -> Ca -> b
+    - b -> Cb -> a
+- PKI（公钥基础设施）组件
+  - RA(Registration Authority)：将用户身份与密钥绑定
+  - CA(Certificate Authority)：发证、验证、撤销、更新
+  - 证书库：保存证书、证书撤销列表(CRL)
+  - 流程
+    - a -> Certificate Request(KUa) -> RA
+    - RA verifies Certificate request and send to CA
+    - CA creates certificate using KRca, store certificate in CA database
+    - CA return certificate to a
 
 # 安全协议概述
 ## 安全协议概念
