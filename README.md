@@ -291,20 +291,20 @@ IPSec三种机制：认证、信息机密性、密钥管理。
 ### 请求身份认证
 - C -> IDc -> AS
 - AS根据IDc从数据库获取其密码，作Hash形成Kc
-- AS -> Kc([C/TGS Key]) + TGT -> C
+- AS -> Kc( [C/TGS Key]+TGT ) -> C
   - TGT = Ktgs([C/TGS Key]+IDc+Lifetime+ADc) AD为网络地址
 - C使用Kc解密得到[C/TGS Key]，但是TGT是由 Ktgs加密的，无法解开，是AS让C携带给TGS的消息
 ### 请求服务授权
 - C -> IDservice + TGT + Authenticator -> TGS
-  - Authenticator = [C/TGS Key](IDc, Timestamp)
+  - Authenticator = [C/TGS Key](IDc, ADc, Timestamp)
 - TGS用Ktgs解密得到[C/TGS Key]和IDc，再解开Authenticator，比较两个IDc是否相同
-- TGS -> [C/TGS Key](C/Server Key) + C-to-S Ticket -> C
-  - C-to-S Ticket(Service Granting Ticket) = Ks([C/Server Key]+IDc+ADc+Lifetime)
-- C使用[C/TGS Key]解密得到C/Server Key，C-to-S Ticket无法解开，是TGS让C携带给Server的消息
+- TGS -> [C/TGS Key](C/Server Key + SGT) -> C
+  - SGT(Service Granting Ticket) = Ks([C/Server Key]+IDc+ADc+Lifetime)
+- C使用[C/TGS Key]解密得到C/Server Key，SGT无法解开，是TGS让C携带给Server的消息
 ### 发送服务请求
-- C -> C-to-S Ticket + Authenticator2 -> Server
-  - Authenticator2 = [C/Server Key](IDc, Timestamp2)
-- Server用Ks解开C-to-S Ticket得到[C/Server Key]和IDc，再解开Authenticator，比较两个IDc是否相同，验证Client合法性
+- C -> SGT + Authenticator2 -> Server
+  - Authenticator2 = [C/Server Key](IDc, ADc, Timestamp2)
+- Server用Ks解开SGT得到[C/Server Key]和IDc，再解开Authenticator2，比较两个IDc是否相同，验证Client合法性
 - Server -> \[C/Server Key](Timestamp2+1) -> C
 - C解密后提取Timestamp2+1验证Server的合法性，从而实现双向认证。
 
