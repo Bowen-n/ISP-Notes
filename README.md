@@ -254,7 +254,6 @@ IPSec三种机制：认证、信息机密性、密钥管理。
   - 保护客户隐私
   - 确保信息不被非法使用（商家将多个支付信息和订单信息交叉组合牟利）
 
-
 ## SET流程
 - **EX** 持卡人 -> 初始请求（语言、交易ID等）-> 商家
 - **EX** 商家 -> 初始应答（OK、OK的数字签名、商家证书、支付网关证书）-> 持卡人
@@ -276,4 +275,40 @@ IPSec三种机制：认证、信息机密性、密钥管理。
 - 9次验证证书？？？
 
 # Kerberos
+## 概念
+- Authentication Server(AS)：认证
+- Ticket Granting Server(TGS)：授权
+## 功能/优势
+- 单点登录(Single Sign On)
+  - 只需登陆一次就能访问多个系统，不用记忆多个口令
+  - 提高工作效率，利于账号密码管理
+  - 方便企业应用部署
+- 认证和授权逻辑分离
+- TGT(10h)和Session Key(5min)生命周期不同，方便客户，降低密钥暴露时间
+## 流程
+### 用户登录
+- 用户输入用户名密码登录客户端，客户端将密码作Hash形成Kc
+### 请求身份认证
+- C -> IDc -> AS
+- AS根据IDc从数据库获取其密码，作Hash形成Kc
+- AS -> Kc([C/TGS Key]) + TGT -> C
+  - TGT = Ktgs([C/TGS Key]+IDc+Lifetime+ADc) AD为网络地址
+- C使用Kc解密得到[C/TGS Key]，但是TGT是由 Ktgs加密的，无法解开，是AS让C携带给TGS的消息
+### 请求服务授权
+- C -> IDservice + TGT + Authenticator -> TGS
+  - Authenticator = [C/TGS Key](IDc, Timestamp)
+- TGS用Ktgs解密得到[C/TGS Key]和IDc，再解开Authenticator，比较两个IDc是否相同
+- TGS -> [C/TGS Key](C/Server Key) + C-to-S Ticket -> C
+  - C-to-S Ticket(Service Granting Ticket) = Ks([C/Server Key]+IDc+ADc+Lifetime)
+- C使用[C/TGS Key]解密得到C/Server Key，C-to-S Ticket无法解开，是TGS让C携带给Server的消息
+### 发送服务请求
+- C -> C-to-S Ticket + Authenticator2 -> Server
+  - Authenticator2 = [C/Server Key](IDc, Timestamp2)
+- Server用Ks解开C-to-S Ticket得到[C/Server Key]和IDc，再解开Authenticator，比较两个IDc是否相同，验证Client合法性
+- Server -> \[C/Server Key](Timestamp2+1) -> C
+- C解密后提取Timestamp2+1验证Server的合法性，从而实现双向认证。
 
+## 跨域认证
+- 获得本地TGS访问权
+- 向本地TGS请求远程TGS的TGT
+- 发送远程TGT给远程TGS，请求远程服务，远程TGS返回远程SGT(Service Granting Ticket)
