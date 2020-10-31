@@ -264,7 +264,16 @@ IPSec三种机制：认证、信息机密性、密钥管理。
   - 保护客户隐私
   - 确保信息不被非法使用（商家将多个支付信息和订单信息交叉组合牟利）
 
-## SET流程
+## SET流程（六次信息交换）
+|持卡人|商家|支付网关|
+|---|---|---|
+|初始请求->|||
+||<-初始应答||
+|购物请求->|||
+||支付请求->||
+|||<-支付应答|
+||<-购物应答||
+
 - **EX** 持卡人 -> 初始请求（语言、交易ID等）-> 商家
 - **EX** 商家 -> 初始应答（OK、OK的数字签名、商家证书、支付网关证书）-> 持卡人
 - **AC** 持卡人验证商家证书、支付网关证书，验证OK数字签名
@@ -299,24 +308,30 @@ IPSec三种机制：认证、信息机密性、密钥管理。
 ### 用户登录
 - 用户输入用户名密码登录客户端，客户端将密码作Hash形成Kc
 ### 请求身份认证
-- C -> IDc -> AS
-- AS根据IDc从数据库获取其密码，作Hash形成Kc
-- AS -> Kc( [C/TGS Key]+TGT ) -> C
-  - TGT = Ktgs([C/TGS Key]+IDc+Lifetime+ADc) AD为网络地址
-- C使用Kc解密得到[C/TGS Key]，但是TGT是由 Ktgs加密的，无法解开，是AS让C携带给TGS的消息
+- 流程
+  - C -> IDc -> AS
+  - AS -> Kc( K<sub>c,tgs</sub> + TGT ) -> C
+    - TGT = Ktgs(K<sub>c,tgs</sub>+IDc+Lifetime+ADc) AD为网络地址
+- 解释
+  - AS根据IDc从数据库获取其密码，作Hash形成Kc
+  - C使用Kc解密得到K<sub>c,tgs</sub>和TGT，但是TGT是由Ktgs加密的，无法解开，是AS让C携带给TGS的消息
 ### 请求服务授权
-- C -> IDservice + TGT + Authenticator -> TGS
-  - Authenticator = [C/TGS Key](IDc, ADc, Timestamp)
-- TGS用Ktgs解密得到[C/TGS Key]和IDc，再解开Authenticator，比较两个IDc是否相同
-- TGS -> [C/TGS Key](C/Server Key + SGT) -> C
-  - SGT(Service Granting Ticket) = Ks([C/Server Key]+IDc+ADc+Lifetime)
-- C使用[C/TGS Key]解密得到C/Server Key，SGT无法解开，是TGS让C携带给Server的消息
+- 流程
+  - C -> IDv + TGT + Authenticator -> TGS
+    - Authenticator = K<sub>c,tgs</sub>(IDc, ADc, Timestamp)
+  - TGS -> K<sub>c,tgs</sub>(K<sub>c,v</sub> + SGT) -> C
+    - SGT(Service Granting Ticket) = Ks(K<sub>c,v</sub>+IDc+ADc+Lifetime)
+- 解释
+  - TGS用Ktgs解密TGT得到K<sub>c,tgs</sub>和IDc，再解开Authenticator，比较两个IDc是否相同
+  - C使用K<sub>c,tgs</sub>解密得到K<sub>c,v</sub>和SGT，SGT由Ks加密无法解开，是TGS让C携带给Server的消息
 ### 发送服务请求
-- C -> SGT + Authenticator2 -> Server
-  - Authenticator2 = [C/Server Key](IDc, ADc, Timestamp2)
-- Server用Ks解开SGT得到[C/Server Key]和IDc，再解开Authenticator2，比较两个IDc是否相同，验证Client合法性
-- Server -> \[C/Server Key](Timestamp2+1) -> C
-- C解密后提取Timestamp2+1验证Server的合法性，从而实现双向认证。
+- 流程
+  - C -> SGT + Authenticator2 -> V
+    - Authenticator2 = K<sub>c,v</sub>(IDc, ADc, Timestamp2)
+  - V -> K<sub>c,v</sub>(Timestamp2+1) -> C
+- 解释
+  - Server用Ks解开SGT得到K<sub>c,v</sub>和IDc，再解开Authenticator2，比较两个IDc是否相同，验证Client合法性
+  - C解密后提取Timestamp2+1验证Server的合法性，从而实现双向认证。
 
 ## 跨域认证
 - 获得本地TGS访问权
