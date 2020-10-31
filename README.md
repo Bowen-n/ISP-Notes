@@ -59,7 +59,7 @@
 - 基于公钥密码体制的公钥分配（四种）
   - 公开发布：用户将公钥直接发给其他用户；<font color=red>容易假冒，以其他用户名义发布公钥</font>
   - 公用目录表：由可信实体建立、接受用户注册公钥、维护，内容为用户名+公钥；<font color=red>目录表易受攻击</font>
-  - 公钥授权：在公用目录表基础上更严格，用户要可靠知道管理员公钥。用户与其他用户通信都需要借助管理机构，<font color=red>公钥管理机构成为系统瓶颈（效率、安全性）</font>
+  - 公钥授权：在公用目录表基础上更严格，用户要可靠知道管理员公钥。<font color=red>用户与其他用户通信都需要借助管理机构请求对方公钥，公钥管理机构成为系统瓶颈（效率、安全性）</font>
     - a -> Req||Time1 -> Authority
     - Authority -> KRauth(KUb||Req||Time1) -> a
     - a -> KUb(IDa||N1) -> b
@@ -78,12 +78,21 @@
 - PKI（公钥基础设施）组件
   - RA(Registration Authority)：将用户身份与密钥绑定
   - CA(Certificate Authority)：发证、验证、撤销、更新
-  - 证书库：保存证书、证书撤销列表(CRL)
+  - X.509v3证书格式
+    - 序列号（唯一标识符）
+    - 颁发者名+标识符
+    - 持有者名+标识符
+    - 持有者公钥
+    - 签名算法
+    - 有效期
+    - 签名：先Hash，再KRca签名，即数字签名
+  - 证书库：保存证书、证书撤销列表(CRL，Web端应将检查CRL的URL嵌在证书中)
   - 流程
     - a -> Certificate Request(KUa) -> RA
     - RA verifies Certificate request and send to CA
     - CA creates certificate using KRca, store certificate in CA database
     - CA return certificate to a
+  - 安全性：身份认证、完整性（数字签名）、机密性（数字信封）、不可否认性
 
 # 安全协议概述
 ## 安全协议概念
